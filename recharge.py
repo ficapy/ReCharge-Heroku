@@ -1,7 +1,7 @@
 __author__ = 'LD'
 #coding:utf-8
 #Create on:2015.1.1
-#Version:0.0.3
+#Version:0.0.4
 
 """
 某日答应某人每天给冲1元话费，于是就写了这个0_0
@@ -17,14 +17,14 @@ import random
 import sys
 
 ###huafeiduo API
-API_KEY = "---------------------------------------"
-SECRET_KEY = "------------------------------------"
-telephone_number = "------------"
+API_KEY = "--------------------------------------"
+SECRET_KEY = "-----------------------------------"
+telephone_number = "-----------------------------"
 
 ###nexmo API
-KEY = "------------------------"
-SECERT = "---------------------"
-my_phone_number = "------------"  ###注意此处需要添加国际区号，但不用添加"+"号
+KEY = "-------------------------"
+SECERT = "----------------------"
+my_phone_number = "-------------"  ###注意此处需要添加国际区号，但不用添加"+"号
 
 
 class ReCharge(object):
@@ -48,7 +48,6 @@ class ReCharge(object):
             "type": "unicode",
             "to": my_phone_number,
             "text": u'nexmo余额为{}, {}'.format(balance, unicode(message, 'UTF-8'))})
-
 
     def send_request(self, rechargetype, timeout=60, retry=3, **kwargs):
         """
@@ -88,7 +87,7 @@ class ReCharge(object):
         """
         for i in self.money:
             if self.send_request("order.phone.check", card_worth=str(i), phone_number=str(telephone_number)):
-                return unicode(i)
+                return i
         return False
 
     def submit_time(self):
@@ -113,7 +112,7 @@ class ReCharge(object):
             self.sms_notify("huafeiduo余额不足,速速充值,该脚本会退出你丫赶紧过来重启")
             sys.exit()
         order_id = self.send_request("order.phone.submit",
-                                     card_worth=money,
+                                     card_worth=str(money),
                                      phone_number=telephone_number,
                                      sp_order_id=''.join([str(random.randint(0, 9)) for k in range(15)])
         )
@@ -121,7 +120,7 @@ class ReCharge(object):
                                       telephone_number,
                                       money
         )
-        return order_id, money 
+        return order_id, money
 
     def check_order(self, order_id):
         #仅捕捉充值出错的情况发送短信提醒
@@ -137,7 +136,7 @@ def main(recharge=ReCharge):
     # hour, minute = recharge.submit_time()
     while True:
         time.sleep(10)
-        nowday = int(time.strftime("%d", time.gmtime(time.time() + 8 * 3600)))，
+        nowday, epoch = int(time.strftime("%d", time.gmtime(time.time() + 8 * 3600))), time.time() + 8 * 3600
         now_hour, now_minute = time.strftime("%H %M", time.gmtime(time.time() + 8 * 3600)).split()
         if flag == nowday:
             if int(now_hour) + int(now_minute) / 60.0 >= hour + minute / 60.0:
@@ -151,7 +150,7 @@ def main(recharge=ReCharge):
                         flag = int(time.strftime("%d", time.gmtime(epoch + (money - 2) / 2 * 24 * 3600)))
                     else:
                         # 日期推后一天
-                        flag = int(time.strftime("%d", time.gmtime(epoch+24*3600)))
+                        flag = int(time.strftime("%d", time.gmtime(epoch + 24 * 3600)))
                     hour, minute = recharge.submit_time()
 
 
