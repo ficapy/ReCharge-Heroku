@@ -1,7 +1,7 @@
 __author__ = 'LD'
 #coding:utf-8
 #Create on:2015.1.1
-#Version:0.0.2
+#Version:0.0.3
 
 """
 某日答应某人每天给冲1元话费，于是就写了这个0_0
@@ -65,8 +65,7 @@ class ReCharge(object):
             "api_key": API_KEY
         }
         params.update(kwargs)
-        i = 0
-        while i < retry:
+        for i in xrange(retry):
             try:
                 info = self.session.get(baseurl, params=params, timeout=timeout)
                 if info.status_code == 200:
@@ -76,7 +75,6 @@ class ReCharge(object):
             except:
                 pass
             time.sleep(10)
-            i += 1
         return False
 
     def check_balance(self):
@@ -105,8 +103,7 @@ class ReCharge(object):
         所以最多使用4*3600/10次查询,如果运气不好...那么听天由命吧
         如果充值超过限值，那么未来几天就暂停充值一段时间
         """
-        i = 0
-        while i < 4 * 3600 / 60:
+        for i in xrange(4 * 3600 / 60):
             money = self.optional_money()
             if money <= limit_money:
                 break
