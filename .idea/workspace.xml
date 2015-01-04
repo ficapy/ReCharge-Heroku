@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f5a855a9-273a-4528-a08b-2bdf817611e2" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/recharge.py" afterPath="$PROJECT_DIR$/recharge.py" />
     </list>
     <ignored path="Scriptlet.iws" />
@@ -60,7 +59,7 @@
       <file leaf-file-name="recharge.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/recharge.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="148" column="41" selection-start="4607" selection-end="4607" vertical-scroll-proportion="0.28284672">
+            <state line="191" column="50" selection-start="6453" selection-end="6453" vertical-scroll-proportion="0.30656934">
               <folding />
             </state>
           </provider>
@@ -412,7 +411,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/recharge.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="148" column="41" selection-start="4607" selection-end="4607" vertical-scroll-proportion="0.28284672">
+        <state line="191" column="50" selection-start="6453" selection-end="6453" vertical-scroll-proportion="0.30656934">
           <folding />
         </state>
       </provider>
