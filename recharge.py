@@ -16,16 +16,20 @@ import time
 import random
 import logging
 from db import msg
+import json
+
+with open(r'./cfg.json', 'r') as f:
+    cfg = json.load(f)
 
 ###huafeiduo API
-API_KEY = "-----------------------------------------"
-SECRET_KEY = "--------------------------------------"
-telephone_number = "--------------------------------"
+API_KEY = cfg["huafeiduo"]["API_KEY"]
+SECRET_KEY = cfg["huafeiduo"]["SECRET_KEY"]
+telephone_number = cfg["huafeiduo"]["telephone_number"]
 
 ###nexmo API
-KEY = "---------------------------------------------"
-SECERT = "------------------------------------------"
-my_phone_number = "---------------------------------"  ###注意此处需要添加国际区号，但不用添加"+"号
+KEY = cfg["nexmo"]["KEY"]
+SECERT = cfg["nexmo"]["SECERT"]
+my_phone_number = cfg["nexmo"]["my_phone_number"]
 
 #设置时区Unix Only
 import platform
@@ -64,9 +68,11 @@ log.addHandler(console_handler)
 
 
 class ReCharge(object):
-    def __init__(self, money=(1, 2, 5, 10, 20, 50, 100, 300)):
+    def __init__(self, money=(1, 2, 5, 10, 20, 50, 100, 300), limit_money=2, optional_money_circle_time=4):
         self.money = money
         self.session = requests.Session()
+        self.limit_money = limit_money
+        self.optional_money_circle_time = optional_money_circle_time
 
     def sms_notify(self, message):
         """
@@ -132,20 +138,20 @@ class ReCharge(object):
         minute = random.randint(0, 60)
         return hour, minute
 
-    def submit(self, telephone_number=telephone_number, limit_money=2):
+    def submit(self, telephone_number=telephone_number):
         """
         对不起啊，我是个穷人，限定到有2元可以充值的时候充值
         更具下面随机生成的时间最晚是晚上7点，保险起见设置4个小时内查询是否有满足条件的金额
         所以最多使用4*3600/10次查询,如果运气不好...那么听天由命吧
         如果充值超过限值，那么未来几天就暂停充值一段时间
         """
-        for i in xrange(4 * 3600 / 60):
+        for i in xrange(self.optional_money_circle_time * 3600 / (60 * 1.5)):
             money = self.optional_money()
-            if money <= limit_money:
+            if money <= self.limit_money:
                 log.debug("花擦居然刷新了{}小时才刷到合适的价格".format(i * 10.0 / 3600))
                 break
             time.sleep(60)
-        if money > limit_money:
+        if money > self.limit_money:
             log.debug("辛苦你了亲，居然连刷4个小时都没刷到")
 
         if self.check_balance() < money + 0.5:
@@ -160,7 +166,7 @@ class ReCharge(object):
         return order_id, money
 
     def check_order(self, order_id):
-        #如果订单号返回failure、订单状态若返回成功失败之外则查询三次每次10分钟，30分钟后还没有返回则认为此次充值失败
+        #如果订单号返回failure、订单状态若返回成功失败之外则查询六次每次5分钟，30分钟后还没有返回则认为此次充值失败
         order_info = self.send_request("order.phone.get", order_id=str(order_id))
         if not order_info or order_info["status"] == u'failure':
             log.error("我艹，为何充值会出错我真不造,重试一次吧")
@@ -168,8 +174,8 @@ class ReCharge(object):
         elif order_info["status"] == u'success':
             return True
         else:
-            for i in xrange(3):
-                time.sleep(60 * 10)
+            for i in xrange(6):
+                time.sleep(60 * 5)
                 order_status = self.send_request("order.phone.get", order_id=str(order_id))["status"]
                 if order_status == u"success":
                     log.info("充值成功")
@@ -181,6 +187,7 @@ class ReCharge(object):
 
 def main(recharge=ReCharge):
     recharge = recharge()
+    default_optional_money_circle_time = recharge.optional_money_circle_time
     flag = int(time.strftime("%d", time.gmtime(time.time() + 8 * 3600)))
     hour, minute = 0, 0   #首次测试用，可同时设置limit_money为10
     # hour, minute = recharge.submit_time()
@@ -198,16 +205,20 @@ def main(recharge=ReCharge):
                 #查询订单状态最多阻塞30分钟
                 order_status = recharge.check_order(order_id)
                 #如果失败最大的可能为查询是可以，但是充值金额不满足，此情况重新循环
+                #并且将查询循环时间改成半小时，成功后恢复到4小时
                 if not order_status:
                     done = False
-                    log.error("充值失败！！！")
+                    recharge.optional_money_circle_time = 0.5
+                    log.error("金额为{}订单{}充值失败！！！".format(str(money), str(order_id)))
                 else:
                     if money > 2:
                         done = True
+                        recharge.optional_money_circle_time = default_optional_money_circle_time
                         flag = int(time.strftime("%d", time.gmtime(epoch + (money - 2) / 2 * 24 * 3600)))
                     else:
                         # 日期推后一天
                         done = True
+                        recharge.optional_money_circle_time = default_optional_money_circle_time
                         flag = int(time.strftime("%d", time.gmtime(epoch + 24 * 3600)))
                     hour, minute = recharge.submit_time()
                     log.debug('等吧等吧，{}号{}时{}分就进行下次充值啦'.format(flag, hour, minute))
