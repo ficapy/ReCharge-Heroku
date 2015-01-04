@@ -189,8 +189,7 @@ def main(recharge=ReCharge):
     recharge = recharge()
     default_optional_money_circle_time = recharge.optional_money_circle_time
     flag = int(time.strftime("%d", time.gmtime(time.time() + 8 * 3600)))
-    hour, minute = 0, 0   #首次测试用，可同时设置limit_money为10
-    # hour, minute = recharge.submit_time()
+    hour, minute = 0, 0   #测试用，可同时设置limit_money为10
     log.info('等吧等吧，到{}时{}分就解放啦'.format(hour, minute))
     done = False
     while True:
