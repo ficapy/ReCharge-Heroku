@@ -145,7 +145,7 @@ class ReCharge(object):
         所以最多使用4*3600/10次查询,如果运气不好...那么听天由命吧
         如果充值超过限值，那么未来几天就暂停充值一段时间
         """
-        for i in xrange(self.optional_money_circle_time * 3600 / (60 * 1.5)):
+        for i in xrange(int(self.optional_money_circle_time * 3600 / (60 * 1.5))):
             money = self.optional_money()
             if money <= self.limit_money:
                 log.debug("花擦居然刷新了{}小时才刷到合适的价格".format(i * 10.0 / 3600))
