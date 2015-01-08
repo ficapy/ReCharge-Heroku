@@ -1,1 +1,0 @@
-worker: python ./recharge.py
