@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#Create on:2015.1.3
-#Version:0.0.1
+#Create on:2015.1.19
 
 """
 因为heroku无法进行本地存储和读取，所有选择用数据库存储记录数据
@@ -10,20 +9,42 @@
 
 import os
 import urlparse
-from sqlalchemy import Column, String, Integer, create_engine
+from sqlalchemy import Column, DateTime, Integer, create_engine,Boolean,String
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from datetime import datetime
 
 Base = declarative_base()
 
+class TimeSign(Base):
+    __tablename__ = 'time_sign'
+    id = Column(Integer, primary_key=True)
+    ts = Column(DateTime, default=datetime.utcnow())
+
+
+    @staticmethod
+    def settime(time=datetime.utcnow()):
+        s.query(TimeSign).update({"ts": time})
+        s.commit()
+
+
+    @staticmethod
+    def fight():
+        sign_time = s.query(TimeSign).first().ts
+        if datetime.now() > sign_time:
+            return True
+        return False
 
 class ReChargeLog(Base):
     __tablename__ = 'ReChargeLog'
     id = Column(Integer, primary_key=True)
     msg = Column(String)
 
-    def __init__(self, msg):
-        self.msg = msg
+    @staticmethod
+    def savemsg(message):
+        d = ReChargeLog(msg=message)
+        s.add(d)
+        s.commit()
 
 
 urlparse.uses_netloc.append("postgres")
@@ -33,13 +54,13 @@ engine = create_engine('postgresql+psycopg2://{user}:{pwd}@{host}:{port}/{databa
                                                                                             pwd=url.password,
                                                                                             host=url.hostname,
                                                                                             port=url.port))
+
 session = sessionmaker()
 session.configure(bind=engine)
 Base.metadata.create_all(engine)
 s = session()
-
-
-def msg(msg):
-    d = ReChargeLog(msg)
-    s.add(d)
+#设置初始时间
+if not s.query(TimeSign).first():
+    inittime = TimeSign()
+    s.add(inittime)
     s.commit()
