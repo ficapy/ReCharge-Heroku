@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#Create on:2015.1.1
-#Version:0.1.4
+#Create on:2015.1.19
 
 """
 某日答应某人每天给冲1元话费，于是就写了这个0_0
@@ -12,10 +11,11 @@
 
 import requests
 from hashlib import md5
-import time
+import time, datetime
 import random
 import logging
-from db import msg
+from db import ReChargeLog
+from db import TimeSign
 import json
 
 with open(r'./cfg.json', 'r') as f:
@@ -32,15 +32,15 @@ SECERT = cfg["nexmo"]["SECERT"]
 my_phone_number = cfg["nexmo"]["my_phone_number"]
 
 #设置时区Unix Only
-import platform
-import os
-
-if time.timezone != -28800:
-    if platform.uname()[0] == "Linux":
-        os.environ['TZ'] = "Asia/Shanghai"
-        time.tzset()
-    elif platform.uname()[0] == "Windows":
-        pass
+# import platform
+# import os
+#
+# if time.timezone != -28800:
+#     if platform.uname()[0] == "Linux":
+#         os.environ['TZ'] = "Asia/Shanghai"
+#         time.tzset()
+#     elif platform.uname()[0] == "Windows":
+#         pass
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -53,7 +53,7 @@ class DBHandler(logging.Handler): # Inherit from logging.Handler
         logging.Handler.__init__(self)
 
     def emit(self, record):
-        msg(self.format(record))
+        ReChargeLog.savemsg(self.format(record))
 
 
 dbhandler = DBHandler()
@@ -68,7 +68,7 @@ log.addHandler(console_handler)
 
 
 class ReCharge(object):
-    def __init__(self, money=(1, 2, 5, 10, 20, 50, 100, 300), limit_money=2, optional_money_circle_time=4):
+    def __init__(self, money=(2, 1, 5, 10, 20, 50, 100, 300), limit_money=2, optional_money_circle_time=4):
         self.money = money
         self.session = requests.Session()
         self.limit_money = limit_money
@@ -134,9 +134,9 @@ class ReCharge(object):
         return False
 
     def submit_time(self):
-        hour = random.randint(8, 17)
-        minute = random.randint(0, 60)
-        return hour, minute
+        hour = random.randint(0, 9)  #换算为GTM+8为（8,17）
+        minute = random.randint(0, 59)
+        return datetime.datetime.now().replace(hour=hour, minute=minute)
 
     def submit(self, telephone_number=telephone_number):
         """
@@ -188,39 +188,31 @@ class ReCharge(object):
 def main(recharge=ReCharge):
     recharge = recharge()
     default_optional_money_circle_time = recharge.optional_money_circle_time
-    flag = int(time.strftime("%d", time.gmtime(time.time() + 8 * 3600)))
-    hour, minute = 0, 0   #测试用，可同时设置limit_money为10
-    log.info('等吧等吧，到{}时{}分就解放啦'.format(hour, minute))
-    done = False
+    log.info('丫又重启了，新的一天开始咯')
     while True:
         time.sleep(10)
-        nowday, epoch = int(time.strftime("%d", time.gmtime(time.time() + 8 * 3600))), time.time() + 8 * 3600
-        now_hour, now_minute = time.strftime("%H %M", time.gmtime(time.time() + 8 * 3600)).split()
-        if not done:
-            flag = nowday
-        if flag == nowday:
-            if int(now_hour) + int(now_minute) / 60.0 >= hour + minute / 60.0:
-                order_id, money = recharge.submit()
-                #查询订单状态最多阻塞30分钟
-                order_status = recharge.check_order(order_id)
-                #如果失败最大的可能为查询是可以，但是充值金额不满足，此情况重新循环
-                #并且将查询循环时间改成半小时，成功后恢复到4小时
-                if not order_status:
-                    done = False
-                    recharge.optional_money_circle_time = 0.5
-                    log.error("金额为{}订单{}充值失败！！！".format(str(money), str(order_id)))
-                else:
-                    if money > 2:
-                        done = True
-                        recharge.optional_money_circle_time = default_optional_money_circle_time
-                        flag = int(time.strftime("%d", time.gmtime(epoch + (money - 2) / 2 * 24 * 3600)))
-                    else:
-                        # 日期推后一天
-                        done = True
-                        recharge.optional_money_circle_time = default_optional_money_circle_time
-                        flag = int(time.strftime("%d", time.gmtime(epoch + 24 * 3600)))
-                    hour, minute = recharge.submit_time()
-                    log.debug('等吧等吧，{}号{}时{}分就进行下次充值啦'.format(flag, hour, minute))
+        if TimeSign.fight():
+            order_id, money = recharge.submit()
+            #查询订单状态最多阻塞30分钟
+            order_status = recharge.check_order(order_id)
+            #如果失败最大的可能为查询是可以，但是充值金额不满足，此情况重新循环
+            #并且将查询循环时间改成半小时，成功后恢复到4小时
+            if not order_status:
+                recharge.optional_money_circle_time = 0.5
+                log.error("金额为{}订单{}充值失败！！！".format(str(money), str(order_id)))
+            else:
+                recharge.optional_money_circle_time = default_optional_money_circle_time
+                days = 1
+                if money > 2:
+                    days = int((money - 2) / 2)
+                next_time = recharge.submit_time() + datetime.timedelta(days=days)
+                TimeSign.settime(next_time)
+                next_time_gtm8 = next_time + datetime.timedelta(hours=8)
+                log.debug('等吧等吧，{}号{}时{}分就进行下次充值啦'.format(
+                    next_time_gtm8.day,
+                    next_time_gtm8.hour,
+                    next_time_gtm8.minute,
+                ))
 
 
 if __name__ == "__main__":
