@@ -62,3 +62,6 @@ public_key
 
 #IDE create
 .idea/
+
+#TEST
+.TEST/
