@@ -21,6 +21,10 @@ class TimeSign(Base):
     id = Column(Integer, primary_key=True)
     ts = Column(DateTime, default=datetime.utcnow())
 
+    @staticmethod
+    def gettime():
+        return s.query(TimeSign).first().ts
+
 
     @staticmethod
     def settime(time=datetime.utcnow()):
@@ -30,10 +34,9 @@ class TimeSign(Base):
 
     @staticmethod
     def fight():
-        sign_time = s.query(TimeSign).first().ts
         #datetime.datetime.now()>datetime.datetime.utcnow() + datetime.timedelta(hours=1)→True
         #统一使用UTC
-        if datetime.utcnow() > sign_time:
+        if datetime.utcnow() > TimeSign.gettime():
             return True
         return False
 
