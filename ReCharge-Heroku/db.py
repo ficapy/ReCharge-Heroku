@@ -31,7 +31,9 @@ class TimeSign(Base):
     @staticmethod
     def fight():
         sign_time = s.query(TimeSign).first().ts
-        if datetime.now() > sign_time:
+        #datetime.datetime.now()>datetime.datetime.utcnow() + datetime.timedelta(hours=1)→True
+        #统一使用UTC
+        if datetime.utcnow() > sign_time:
             return True
         return False
 
