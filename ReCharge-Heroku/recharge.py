@@ -189,6 +189,12 @@ def main(recharge=ReCharge):
     recharge = recharge()
     default_optional_money_circle_time = recharge.optional_money_circle_time
     log.info('丫又重启了，新的一天开始咯')
+    log.info("马上开始充值呀") if TimeSign.gettime() < datetime.datetime.utcnow() else\
+        log.info('等吧等吧，{}号{}时{}分就进行充值啦'.format(
+            (TimeSign.gettime()+datetime.timedelta(hours=8)).day,
+            (TimeSign.gettime()+datetime.timedelta(hours=8)).hour,
+            (TimeSign.gettime()+datetime.timedelta(hours=8)).minute,
+                ))
     while True:
         time.sleep(10)
         if TimeSign.fight():
@@ -208,7 +214,7 @@ def main(recharge=ReCharge):
                 next_time = recharge.submit_time() + datetime.timedelta(days=days)
                 TimeSign.settime(next_time)
                 next_time_gtm8 = next_time + datetime.timedelta(hours=8)
-                log.debug('等吧等吧，{}号{}时{}分就进行下次充值啦'.format(
+                log.info('等吧等吧，{}号{}时{}分就进行下次充值啦'.format(
                     next_time_gtm8.day,
                     next_time_gtm8.hour,
                     next_time_gtm8.minute,
