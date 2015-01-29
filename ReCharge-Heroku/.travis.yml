@@ -1,0 +1,16 @@
+language: python
+deploy:
+  provider: heroku
+  buildpack: python
+  api_key:
+    secure: orDWKQmmjV5vbTDkYPuP3+4vmCAnfBf/hea+0HwQM9KPXidNEuzIzwI5h2GAuQRDv1gR0yguWaFFfeopvAvd1KTnYBY1upz05B/mwunSYJIYGYnl+9sJx4sPeQiTRW6/fkCajFyMzxXbvR3CVp2kH8IOJhWRZtB0g69Z1MBh3Ns=
+  app: phone-recharge
+  on:
+    repo: aec4d/Scriptlet/ReCharge-Heroku
+install:
+- pip install -r requirements.txt
+script:
+- time
+before_install:
+- openssl aes-256-cbc -K $encrypted_e8fddd60eeab_key -iv $encrypted_e8fddd60eeab_iv
+  -in cfg.json.enc -out cfg.json -d
