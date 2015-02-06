@@ -53,15 +53,4 @@ docs/_build/
 # PyBuilder
 target/
 
-#config
-cfg.json
-
-#RSA_key
-private_key
-public_key
-
-#IDE create
 .idea/
-
-#TEST
-TEST/

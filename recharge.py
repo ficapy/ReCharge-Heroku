@@ -100,7 +100,7 @@ class ReCharge(object):
         for i in self.money:
             if self.send_request("order.phone.check", card_worth=str(i), phone_number=str(telephone_number)):
                 return i
-        if random.random() >0.5:sendMsg("网络故障？没有查询到可充值的金额")
+        if random.random() >0.5:sendMsg("充值脚本","网络故障？没有查询到可充值的金额")
         return self.optional_money()
 
     def submit_time(self):
@@ -127,7 +127,7 @@ class ReCharge(object):
 
         if self.check_balance() < money + 0.5:
             log.warning("huafeiduo余额不足,速速充值")
-            sendMsg("huafeiduo余额不足,速速充值")
+            sendMsg("充值脚本","huafeiduo余额不足,速速充值")
         order_id = self.send_request("order.phone.submit",
                                      card_worth=str(money),
                                      phone_number=telephone_number,
