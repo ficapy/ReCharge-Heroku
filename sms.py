@@ -107,9 +107,8 @@ def sendMsg(title, msg):
 
 
 if __name__ == '__main__':
-    # pushbullet("pushbullet", "测试")
-    # fetion("飞信", "测试")
-    # nexmo("nexmo", "测试")
+    print fetion("飞信","测试")
+    # print nexmo("nexmo"."测试")
     for i in range(1):
         print i, sendMsg("测试", str(i))
 
